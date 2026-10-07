@@ -116,64 +116,87 @@
       </article>
 
       <article class="case">
-        <h3>Building a log ingestion pipeline into Sentinel</h3>
+        <h3>Building log ingestion pipelines into Sentinel</h3>
         <div class="story">
           <div class="story-block">
             <p class="story-label">The problem</p>
             <p>Useful logs arrived as unstructured text or nested JSON, which analysts can't query
-              reliably. Ingestion failures were also hard to spot and slow to diagnose.</p>
+              reliably, and they came from sources with very different network access. Ingestion failures
+              were also hard to spot and slow to diagnose.</p>
           </div>
           <div class="story-block">
             <p class="story-label">The approach</p>
-            <p>Logs are collected and pre-parsed with regex in Fluent Bit, then ingested through the path
-              that fits the source: a Data Collection Rule directly, a Function App, or a Logic App acting
-              as a listener or polling with GET requests. A KQL transformation then shapes the data into
-              structured, queryable tables. Bash scripts manage log files against disk thresholds.</p>
+            <p>Every new source starts with one question: can it reach the cloud tenant directly? For
+              platforms that can, I configure the integration on both ends: the export on the platform
+              itself, and a Logic App in Azure that either listens for pushed data or polls with a
+              scheduled GET request. For sources that can't, such as isolated or network-gapped servers,
+              Fluent Bit collects the logs locally, pre-parses them with regex, and forwards them through
+              a Data Collection Endpoint to the Data Collection Rule. On either path, a KQL transformation
+              in the DCR shapes the data into structured, queryable tables, and Bash scripts manage log
+              files against disk thresholds.</p>
             <figure class="shot diagram">
-              <svg viewBox="0 0 340 392" role="img" aria-label="Log ingestion flow: log source to Fluent Bit collector to ingestion path to DCR transformation to Log Analytics and Sentinel">
+              <svg viewBox="0 0 340 484" role="img" aria-label="Ingestion decision flow: sources that can reach the cloud tenant use a Logic App listener or GET poll; isolated sources use Fluent Bit and a Data Collection Endpoint; both feed a DCR KQL transformation and then a Log Analytics workspace">
                 <defs>
                   <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                     <path d="M0,0 L10,5 L0,10 z" fill="#57697D"/>
                   </marker>
                 </defs>
-                <g font-family="IBM Plex Sans, sans-serif" font-size="13" text-anchor="middle">
-                  <rect x="20" y="0" width="300" height="56" rx="3" fill="#fff" stroke="#DCE3EA"/>
-                  <text x="170" y="24" fill="#16202E" font-weight="600">Log source</text>
-                  <text x="170" y="42" fill="#57697D">servers, syslog, application feeds</text>
+                <g font-family="IBM Plex Sans, sans-serif" font-size="12" text-anchor="middle">
+                  <rect x="20" y="0" width="300" height="48" rx="3" fill="#fff" stroke="#C97F2E"/>
+                  <text x="170" y="21" fill="#16202E" font-weight="600" font-size="13">New log source</text>
+                  <text x="170" y="38" fill="#57697D">Can it reach the cloud tenant directly?</text>
 
-                  <line x1="170" y1="56" x2="170" y2="84" stroke="#57697D" stroke-width="1.5" marker-end="url(#arr)"/>
+                  <line x1="120" y1="48" x2="85" y2="76" stroke="#57697D" stroke-width="1.5" marker-end="url(#arr)"/>
+                  <line x1="220" y1="48" x2="255" y2="76" stroke="#57697D" stroke-width="1.5" marker-end="url(#arr)"/>
+                  <text x="82" y="68" fill="#57697D" text-anchor="end">yes</text>
+                  <text x="258" y="68" fill="#57697D" text-anchor="start">no</text>
 
-                  <rect x="20" y="84" width="300" height="56" rx="3" fill="#fff" stroke="#DCE3EA"/>
-                  <text x="170" y="108" fill="#16202E" font-weight="600">Fluent Bit collector</text>
-                  <text x="170" y="126" fill="#57697D">listener + regex pre-parse</text>
+                  <rect x="10" y="80" width="150" height="66" rx="3" fill="#fff" stroke="#DCE3EA"/>
+                  <text x="85" y="100" fill="#16202E" font-weight="600">Direct to tenant</text>
+                  <text x="85" y="118" fill="#57697D">Logic App listener</text>
+                  <text x="85" y="134" fill="#57697D">or scheduled GET</text>
 
-                  <line x1="170" y1="140" x2="170" y2="168" stroke="#57697D" stroke-width="1.5" marker-end="url(#arr)"/>
+                  <rect x="180" y="80" width="150" height="66" rx="3" fill="#fff" stroke="#DCE3EA"/>
+                  <text x="255" y="100" fill="#16202E" font-weight="600">Isolated source</text>
+                  <text x="255" y="118" fill="#57697D">e.g. network-gapped</text>
+                  <text x="255" y="134" fill="#57697D">server</text>
 
-                  <rect x="20" y="168" width="300" height="56" rx="3" fill="#fff" stroke="#C97F2E"/>
-                  <text x="170" y="192" fill="#16202E" font-weight="600">Ingestion path</text>
-                  <text x="170" y="210" fill="#57697D">direct DCR · Function App · Logic App</text>
+                  <line x1="255" y1="146" x2="255" y2="170" stroke="#57697D" stroke-width="1.5" marker-end="url(#arr)"/>
 
-                  <line x1="170" y1="224" x2="170" y2="252" stroke="#57697D" stroke-width="1.5" marker-end="url(#arr)"/>
+                  <rect x="180" y="172" width="150" height="66" rx="3" fill="#fff" stroke="#DCE3EA"/>
+                  <text x="255" y="192" fill="#16202E" font-weight="600">Fluent Bit</text>
+                  <text x="255" y="210" fill="#57697D">local collection,</text>
+                  <text x="255" y="226" fill="#57697D">regex pre-parse</text>
 
-                  <rect x="20" y="252" width="300" height="56" rx="3" fill="#fff" stroke="#DCE3EA"/>
-                  <text x="170" y="276" fill="#16202E" font-weight="600">DCR transformation</text>
-                  <text x="170" y="294" fill="#57697D">KQL turns raw and JSON into columns</text>
+                  <line x1="255" y1="238" x2="255" y2="262" stroke="#57697D" stroke-width="1.5" marker-end="url(#arr)"/>
 
-                  <line x1="170" y1="308" x2="170" y2="336" stroke="#57697D" stroke-width="1.5" marker-end="url(#arr)"/>
+                  <rect x="180" y="264" width="150" height="66" rx="3" fill="#fff" stroke="#DCE3EA"/>
+                  <text x="255" y="284" fill="#16202E" font-weight="600">Data Collection</text>
+                  <text x="255" y="302" fill="#16202E" font-weight="600">Endpoint</text>
+                  <text x="255" y="320" fill="#57697D">forwards to the DCR</text>
 
-                  <rect x="20" y="336" width="300" height="56" rx="3" fill="#101826" stroke="#101826"/>
-                  <text x="170" y="360" fill="#E9EEF3" font-weight="600">Log Analytics workspace</text>
-                  <text x="170" y="378" fill="#93A2B4">structured tables, queried in Sentinel</text>
+                  <line x1="85" y1="146" x2="85" y2="354" stroke="#57697D" stroke-width="1.5" marker-end="url(#arr)"/>
+                  <line x1="255" y1="330" x2="255" y2="354" stroke="#57697D" stroke-width="1.5" marker-end="url(#arr)"/>
+
+                  <rect x="20" y="356" width="300" height="52" rx="3" fill="#fff" stroke="#C97F2E"/>
+                  <text x="170" y="377" fill="#16202E" font-weight="600" font-size="13">DCR transformation</text>
+                  <text x="170" y="395" fill="#57697D">KQL turns raw text and JSON into columns</text>
+
+                  <line x1="170" y1="408" x2="170" y2="432" stroke="#57697D" stroke-width="1.5" marker-end="url(#arr)"/>
+
+                  <rect x="20" y="434" width="300" height="50" rx="3" fill="#101826" stroke="#101826"/>
+                  <text x="170" y="455" fill="#E9EEF3" font-weight="600" font-size="13">Log Analytics workspace</text>
+                  <text x="170" y="472" fill="#93A2B4">structured tables, queried in Sentinel</text>
                 </g>
               </svg>
-              <figcaption>Ingestion flow, simplified. Sources and hostnames are intentionally generic.</figcaption>
+              <figcaption>Ingestion decision flow, simplified. Sources and hostnames are intentionally generic.</figcaption>
             </figure>
           </div>
           <div class="story-block">
             <p class="story-label">The result</p>
-            <p>Sources arrive as clean, queryable tables instead of raw text. I also troubleshoot ingestion
+            <p>Both paths end in clean, queryable tables instead of raw text. I also troubleshoot ingestion
               failures across DCRs, Function Apps, and Fluent Bit feeds, and I've trained SOC engineers on
-              building this pipeline themselves.</p>
+              building these pipelines themselves.</p>
           </div>
         </div>
       </article>
