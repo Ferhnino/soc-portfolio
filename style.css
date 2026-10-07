@@ -416,3 +416,47 @@ a:focus-visible, button:focus-visible {
   html { scroll-behavior: auto; }
   .hero-grid { animation: none; }
 }
+
+
+/* ---------- Case studies ---------- */
+
+.case {
+  margin-top: 48px;
+  padding-top: 40px;
+  border-top: 1px solid var(--border);
+}
+
+.case h3 { font-size: 1.35rem; }
+
+.case .story { margin-top: 24px; }
+
+.case .story-block p { max-width: 68ch; }
+
+.diagram { max-width: 420px; }
+
+.diagram svg { display: block; width: 100%; height: auto; }
+
+.code-label {
+  margin: 20px 0 8px !important;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+pre {
+  margin: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  background: var(--ink);
+  color: var(--text-on-ink);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+pre code {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+.story { grid-template-columns: minmax(0, 1fr); }
+.story-block { min-width: 0; }

@@ -18,7 +18,7 @@
       <span class="nav-mark">/soc</span>
       <div class="nav-links">
         <a href="#about">About</a>
-        <a href="#soc">What I do</a>
+        <a href="#cases">Case studies</a>
         <a href="#build">Build</a>
         <a href="#skills">Skills</a>
         <a href="#contact">Contact</a>
@@ -83,34 +83,148 @@
     </div>
   </section>
 
-  <section id="soc" class="section section-alt">
+  <section id="cases" class="section section-alt">
     <div class="wrap">
-      <h2>What I do</h2>
-      <div class="skill-groups">
-        <div class="skill-group">
-          <p class="skill-group-label">SOC analysis</p>
-          <p>Deep-dive incident investigations across SIEM, EDR, and adjacent security tools; escalation
-            point for Tier 1 analysts; playbooks for alerts that need a pivot out of the SIEM; weekly
-            briefings on investigation findings.</p>
+      <h2>Case studies</h2>
+      <p class="lead">Three pieces of SOC work, written up as problem, approach, and result. Details are
+        generalized, and the code is illustrative.</p>
+
+      <article class="case">
+        <h3>Cutting alert noise in Microsoft Sentinel</h3>
+        <div class="story">
+          <div class="story-block">
+            <p class="story-label">The problem</p>
+            <p>Analysts were manually closing 600+ alerts a week, many of them false positives, which
+              took time away from the alerts that mattered.</p>
+          </div>
+          <div class="story-block">
+            <p class="story-label">The approach</p>
+            <p>I led a month-long overhaul of the Sentinel analytics: reducing false positives and
+              enriching the detection logic so alerts arrived with the context an analyst needs to decide
+              quickly.</p>
+          </div>
+          <div class="story-block">
+            <p class="story-label">The result</p>
+            <p>Manual alert closures dropped from 600+ to fewer than 200 a week, a reduction of more than
+              65% in analyst workload.</p>
+            <div class="stat-row">
+              <div class="stat"><span class="stat-num">600+ → &lt;200</span><span class="stat-label">manual alert closures per week</span></div>
+              <div class="stat"><span class="stat-num">65%+</span><span class="stat-label">less analyst workload</span></div>
+            </div>
+          </div>
         </div>
-        <div class="skill-group">
-          <p class="skill-group-label">Detection engineering</p>
-          <p>Tuned Sentinel analytics to cut manual alert closures from 600+ to under 200 a week
-            (65%+ less analyst workload); reusable KQL functions that let analysts with limited KQL
-            investigate effectively.</p>
+      </article>
+
+      <article class="case">
+        <h3>Building a log ingestion pipeline into Sentinel</h3>
+        <div class="story">
+          <div class="story-block">
+            <p class="story-label">The problem</p>
+            <p>Useful logs arrived as unstructured text or nested JSON, which analysts can't query
+              reliably. Ingestion failures were also hard to spot and slow to diagnose.</p>
+          </div>
+          <div class="story-block">
+            <p class="story-label">The approach</p>
+            <p>Logs are collected and pre-parsed with regex in Fluent Bit, then ingested through the path
+              that fits the source: a Data Collection Rule directly, a Function App, or a Logic App acting
+              as a listener or polling with GET requests. A KQL transformation then shapes the data into
+              structured, queryable tables. Bash scripts manage log files against disk thresholds.</p>
+            <figure class="shot diagram">
+              <svg viewBox="0 0 340 392" role="img" aria-label="Log ingestion flow: log source to Fluent Bit collector to ingestion path to DCR transformation to Log Analytics and Sentinel">
+                <defs>
+                  <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#57697D"/>
+                  </marker>
+                </defs>
+                <g font-family="IBM Plex Sans, sans-serif" font-size="13" text-anchor="middle">
+                  <rect x="20" y="0" width="300" height="56" rx="3" fill="#fff" stroke="#DCE3EA"/>
+                  <text x="170" y="24" fill="#16202E" font-weight="600">Log source</text>
+                  <text x="170" y="42" fill="#57697D">servers, syslog, application feeds</text>
+
+                  <line x1="170" y1="56" x2="170" y2="84" stroke="#57697D" stroke-width="1.5" marker-end="url(#arr)"/>
+
+                  <rect x="20" y="84" width="300" height="56" rx="3" fill="#fff" stroke="#DCE3EA"/>
+                  <text x="170" y="108" fill="#16202E" font-weight="600">Fluent Bit collector</text>
+                  <text x="170" y="126" fill="#57697D">listener + regex pre-parse</text>
+
+                  <line x1="170" y1="140" x2="170" y2="168" stroke="#57697D" stroke-width="1.5" marker-end="url(#arr)"/>
+
+                  <rect x="20" y="168" width="300" height="56" rx="3" fill="#fff" stroke="#C97F2E"/>
+                  <text x="170" y="192" fill="#16202E" font-weight="600">Ingestion path</text>
+                  <text x="170" y="210" fill="#57697D">direct DCR · Function App · Logic App</text>
+
+                  <line x1="170" y1="224" x2="170" y2="252" stroke="#57697D" stroke-width="1.5" marker-end="url(#arr)"/>
+
+                  <rect x="20" y="252" width="300" height="56" rx="3" fill="#fff" stroke="#DCE3EA"/>
+                  <text x="170" y="276" fill="#16202E" font-weight="600">DCR transformation</text>
+                  <text x="170" y="294" fill="#57697D">KQL turns raw and JSON into columns</text>
+
+                  <line x1="170" y1="308" x2="170" y2="336" stroke="#57697D" stroke-width="1.5" marker-end="url(#arr)"/>
+
+                  <rect x="20" y="336" width="300" height="56" rx="3" fill="#101826" stroke="#101826"/>
+                  <text x="170" y="360" fill="#E9EEF3" font-weight="600">Log Analytics workspace</text>
+                  <text x="170" y="378" fill="#93A2B4">structured tables, queried in Sentinel</text>
+                </g>
+              </svg>
+              <figcaption>Ingestion flow, simplified. Sources and hostnames are intentionally generic.</figcaption>
+            </figure>
+          </div>
+          <div class="story-block">
+            <p class="story-label">The result</p>
+            <p>Sources arrive as clean, queryable tables instead of raw text. I also troubleshoot ingestion
+              failures across DCRs, Function Apps, and Fluent Bit feeds, and I've trained SOC engineers on
+              building this pipeline themselves.</p>
+          </div>
         </div>
-        <div class="skill-group">
-          <p class="skill-group-label">SOC engineering</p>
-          <p>Log ingestion from Fluent Bit feeds into Sentinel using DCRs, Function Apps, and Logic Apps;
-            parsing and normalizing unstructured and JSON data into queryable tables; Bash and Logic App
-            automation, including recurring reports for compliance stakeholders.</p>
+      </article>
+
+      <article class="case">
+        <h3>KQL that helps analysts investigate faster</h3>
+        <div class="story">
+          <div class="story-block">
+            <p class="story-label">The problem</p>
+            <p>Deep investigations need complex queries, and not every analyst has deep KQL experience.
+              That makes triage slower and the hardest queries harder to share.</p>
+          </div>
+          <div class="story-block">
+            <p class="story-label">The approach</p>
+            <p>I package complex logic into reusable KQL functions, so an analyst supplies a user and a
+              time window and gets a consistent, readable summary. I also write the heavier queries
+              that sensitive investigations require.</p>
+            <p class="code-label">Illustrative example: a reusable user sign-in summary (standard Sentinel SigninLogs schema)</p>
+<pre><code>let UserSignInSummary = (user: string, lookback: timespan) {
+    SigninLogs
+    | where TimeGenerated &gt; ago(lookback)
+    | where UserPrincipalName =~ user
+    | summarize
+        Attempts  = count(),
+        Failures  = countif(ResultType != "0"),
+        Countries = make_set(tostring(LocationDetails.countryOrRegion)),
+        Apps      = make_set(AppDisplayName),
+        FirstSeen = min(TimeGenerated),
+        LastSeen  = max(TimeGenerated)
+      by UserPrincipalName, IPAddress
+    | order by Failures desc
+};
+UserSignInSummary("user@contoso.com", 7d)</code></pre>
+            <p class="code-label">Illustrative example: shaping raw JSON into structured columns</p>
+<pre><code>RawLogs_CL
+| extend p = parse_json(RawData)
+| project
+    TimeGenerated,
+    Host      = tostring(p.host),
+    Severity  = tostring(p.severity),
+    SourceIP  = tostring(p.src_ip),
+    User      = extract(@"user=(\S+)", 1, tostring(p.message)),
+    Message   = tostring(p.message)</code></pre>
+          </div>
+          <div class="story-block">
+            <p class="story-label">The result</p>
+            <p>Analysts with limited KQL experience can investigate effectively, triage is faster, and the
+              team has a shared set of tested queries to build on.</p>
+          </div>
         </div>
-        <div class="skill-group">
-          <p class="skill-group-label">Threat hunting &amp; intelligence</p>
-          <p>Proactive, ATT&amp;CK-aligned hunts from intelligence advisories and CISA KEV/CVE entries on
-            short notice, with a standardized hunt report template.</p>
-        </div>
-      </div>
+      </article>
     </div>
   </section>
 
