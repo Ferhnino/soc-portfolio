@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DutchNyquil — SOC Analyst &amp; Security Engineer</title>
-<meta name="description" content="Portfolio of a SOC analyst and security engineer specializing in detection engineering, KQL, and security tooling.">
+<title>DutchNyquil — SOC Analyst &amp; SOC Engineer</title>
+<meta name="description" content="Portfolio of a SOC analyst and SOC engineer: incident response, threat hunting, KQL detection engineering, and Azure log ingestion pipelines.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -18,6 +18,7 @@
       <span class="nav-mark">/soc</span>
       <div class="nav-links">
         <a href="#about">About</a>
+        <a href="#soc">What I do</a>
         <a href="#build">Build</a>
         <a href="#skills">Skills</a>
         <a href="#contact">Contact</a>
@@ -27,15 +28,15 @@
     <div class="hero-grid">
       <div class="hero-copy">
         <h1>DutchNyquil</h1>
-        <p class="role">SOC Analyst &amp; Security Engineer</p>
-        <p class="pitch">I work as a SOC analyst and security engineer, split between day-to-day incident
-          response and the engineering side of the job — configuring Azure log ingestion and building the
-          tooling my team doesn't have off the shelf.</p>
+        <p class="role">SOC Analyst &amp; SOC Engineer</p>
+        <p class="pitch">I'm a SOC analyst who also does the engineering side of the job: investigating
+          and responding to incidents, hunting from threat intelligence, and building the log ingestion,
+          KQL detections, and automation that make a SOC faster and quieter.</p>
       </div>
 
       <div class="feed-panel" aria-label="threat-feed-lite ingest status">
         <div class="feed-head">
-          <span class="feed-title">threat-feed-lite — ingest status</span>
+          <span class="feed-title">threat-feed-lite — ingest status (sample of sources)</span>
           <span class="feed-cadence">hourly</span>
         </div>
         <ul class="feed-rows">
@@ -56,30 +57,64 @@
     <div class="wrap">
       <h2>About</h2>
       <p class="lead">
-        <!-- EDIT: adjust this bio to your own voice/details -->
-        I work threat intelligence day to day — building dashboards, producing baseline reports, and
-        feeding both into the team's threat hunts. Most of that runs through Microsoft KQL, and I'm
-        comfortable working through Logic Apps and Data Collection Rules to get the right data flowing
-        in the first place. Outside of work, I build my own security tools to support threat intel
-        gathering on my own time.
-        <!-- /EDIT -->
+        I'm a Tier 2 SOC analyst with a second job as the team's engineer: the person analysts escalate
+        to, the one who writes the complex KQL for deep investigations, and the one who builds the
+        ingestion pipelines feeding the SIEM. I also run threat hunts from intelligence advisories and
+        train analysts and engineers on investigation and ingestion. Outside of work, I build my own
+        security tools to support threat intelligence gathering.
       </p>
       <div class="chip-row">
+        <span class="chip">Incident response</span>
+        <span class="chip">Threat hunting</span>
         <span class="chip">KQL</span>
         <span class="chip">Microsoft Sentinel</span>
-        <span class="chip">Python</span>
+        <span class="chip">Azure log ingestion</span>
+        <span class="chip">Fluent Bit</span>
+        <span class="chip">Logic Apps</span>
+        <span class="chip">Data Collection Rules</span>
         <span class="chip">MITRE ATT&amp;CK</span>
         <span class="chip">Regex</span>
-        <span class="chip">Azure log ingestion</span>
+        <span class="chip">Python</span>
       </div>
       <div class="cred-row">
-        <span class="cred">SC-200: Security Operations Analyst</span>
-        <span class="cred">SC-300: Identity and Access Administrator</span>
+        <span class="cred">Microsoft Certified: Security Operations Analyst Associate (SC-200)</span>
+        <span class="cred">Microsoft Certified: Identity and Access Administrator Associate (SC-300)</span>
       </div>
     </div>
   </section>
 
-  <section id="build" class="section section-alt">
+  <section id="soc" class="section section-alt">
+    <div class="wrap">
+      <h2>What I do</h2>
+      <div class="skill-groups">
+        <div class="skill-group">
+          <p class="skill-group-label">SOC analysis</p>
+          <p>Deep-dive incident investigations across SIEM, EDR, and adjacent security tools; escalation
+            point for Tier 1 analysts; playbooks for alerts that need a pivot out of the SIEM; weekly
+            briefings on investigation findings.</p>
+        </div>
+        <div class="skill-group">
+          <p class="skill-group-label">Detection engineering</p>
+          <p>Tuned Sentinel analytics to cut manual alert closures from 600+ to under 200 a week
+            (65%+ less analyst workload); reusable KQL functions that let analysts with limited KQL
+            investigate effectively.</p>
+        </div>
+        <div class="skill-group">
+          <p class="skill-group-label">SOC engineering</p>
+          <p>Log ingestion from Fluent Bit feeds into Sentinel using DCRs, Function Apps, and Logic Apps;
+            parsing and normalizing unstructured and JSON data into queryable tables; Bash and Logic App
+            automation, including recurring reports for compliance stakeholders.</p>
+        </div>
+        <div class="skill-group">
+          <p class="skill-group-label">Threat hunting &amp; intelligence</p>
+          <p>Proactive, ATT&amp;CK-aligned hunts from intelligence advisories and CISA KEV/CVE entries on
+            short notice, with a standardized hunt report template.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="build" class="section">
     <div class="wrap">
       <h2>Featured build</h2>
       <h3 class="project-title">threat-feed-lite</h3>
@@ -105,7 +140,7 @@
             and confidence, report back before writing anything, and only then populate a formatted hunt
             report once I've signed off on scope.</p>
           <div class="stat-row">
-            <div class="stat"><span class="stat-num">53,181</span><span class="stat-label">articles ingested</span></div>
+            <div class="stat"><span class="stat-num">53,181</span><span class="stat-label">articles ingested (as of Sep 26, 2026)</span></div>
             <div class="stat"><span class="stat-num">5,785</span><span class="stat-label">entities extracted</span></div>
             <div class="stat"><span class="stat-num">36,375</span><span class="stat-label">relationships mapped</span></div>
           </div>
@@ -157,22 +192,23 @@
     </div>
   </section>
 
-  <section id="skills" class="section">
+  <section id="skills" class="section section-alt">
     <div class="wrap">
       <h2>Skills</h2>
       <div class="skill-groups">
         <div class="skill-group">
           <p class="skill-group-label">Detection &amp; hunting</p>
-          <p>KQL, Microsoft Sentinel, MITRE ATT&amp;CK mapping, log analysis</p>
+          <p>KQL, Microsoft Sentinel, MITRE ATT&amp;CK mapping, log analysis, incident response, forensic
+            triage</p>
         </div>
         <div class="skill-group">
-          <p class="skill-group-label">Engineering &amp; automation</p>
-          <p>Python, SQLite, REST API integration, regex, Windows Task Scheduler automation, Azure log
-            ingestion &amp; schema design</p>
+          <p class="skill-group-label">Ingestion &amp; automation</p>
+          <p>Fluent Bit, Data Collection Rules, Function Apps, Logic Apps, regex, Bash, Python, SQLite,
+            REST API integration, Windows Task Scheduler, Azure log ingestion &amp; schema design</p>
         </div>
         <div class="skill-group">
-          <p class="skill-group-label">Certifications</p>
-          <p>SC-200: Security Operations Analyst · SC-300: Identity and Access Administrator</p>
+          <p class="skill-group-label">Security tools</p>
+          <p>CrowdStrike, Microsoft Defender for Endpoint, Carbon Black App Control, Tenable, ServiceNow</p>
         </div>
         <div class="skill-group">
           <p class="skill-group-label">Team tooling</p>
@@ -188,11 +224,7 @@
   <div class="wrap contact-inner">
     <h2>Get in touch</h2>
     <ul class="contact-list">
-      <!-- EDIT: fill in your real links -->
-      <li><span>Email</span><a href="mailto:your.email@example.com">your.email@example.com</a></li>
-      <li><span>GitHub</span><a href="https://github.com/yourusername">github.com/yourusername</a></li>
-      <li><span>LinkedIn</span><a href="https://linkedin.com/in/yourusername">linkedin.com/in/yourusername</a></li>
-      <!-- /EDIT -->
+      <li><span>GitHub</span><a href="https://github.com/Ferhnino">github.com/Ferhnino</a></li>
     </ul>
   </div>
 </footer>
