@@ -87,7 +87,7 @@
     <div class="wrap">
       <h2>Case studies</h2>
       <p class="lead">Three pieces of SOC work, written up as problem, approach, and result. Details are
-        generalized, and the code is illustrative.</p>
+        generalized to keep any employer information out.</p>
 
       <article class="case">
         <h3>Cutting alert noise in Microsoft Sentinel</h3>
@@ -207,44 +207,62 @@
           <div class="story-block">
             <p class="story-label">The problem</p>
             <p>Deep investigations need complex queries, and not every analyst has deep KQL experience.
-              That makes triage slower and the hardest queries harder to share.</p>
+              Scoping an incident often starts with the same question: who else has run this executable,
+              and where? Answering it means joining process events to Windows security events to turn a
+              SID into a username, which is slow to write under pressure and easy to get wrong.</p>
           </div>
           <div class="story-block">
             <p class="story-label">The approach</p>
-            <p>I package complex logic into reusable KQL functions, so an analyst supplies a user and a
-              time window and gets a consistent, readable summary. I also write the heavier queries
-              that sensitive investigations require.</p>
-            <p class="code-label">Illustrative example: a reusable user sign-in summary (standard Sentinel SigninLogs schema)</p>
-<pre><code>let UserSignInSummary = (user: string, lookback: timespan) {
-    SigninLogs
+            <p>I turned that investigation into a reusable, parameterized function. An analyst gives it an
+              executable name and, optionally, a time window and a single host, and gets back one row per
+              user showing the most recent time they ran it.</p>
+            <p class="code-label">executable_users: maps which users have launched processes from an executable. Field names reflect the custom schema it was written for, so adapt them to your own parsers.</p>
+<pre><code>let executable_users = (executable: string, lookback: timespan = 7d, computer_name: string = "") {
+    let sid_to_user =
+        union WindowsEvent, SecurityEvent
+        | where TimeGenerated &gt; ago(lookback)
+        | project
+            SubjectUserName = tostring(coalesce(SubjectUserName, EventData_dynamic.SubjectUserName)),
+            SubjectUserSid  = tostring(coalesce(SubjectUserSid, EventData_dynamic.SubjectUserSid)),
+            TimeGenerated
+        | where isnotempty(SubjectUserSid)
+        | summarize arg_max(TimeGenerated, SubjectUserName) by SubjectUserSid;
+    ASimProcessEvents
     | where TimeGenerated &gt; ago(lookback)
-    | where UserPrincipalName =~ user
-    | summarize
-        Attempts  = count(),
-        Failures  = countif(ResultType != "0"),
-        Countries = make_set(tostring(LocationDetails.countryOrRegion)),
-        Apps      = make_set(AppDisplayName),
-        FirstSeen = min(TimeGenerated),
-        LastSeen  = max(TimeGenerated)
-      by UserPrincipalName, IPAddress
-    | order by Failures desc
-};
-UserSignInSummary("user@contoso.com", 7d)</code></pre>
-            <p class="code-label">Illustrative example: shaping raw JSON into structured columns</p>
-<pre><code>RawLogs_CL
-| extend p = parse_json(RawData)
-| project
-    TimeGenerated,
-    Host      = tostring(p.host),
-    Severity  = tostring(p.severity),
-    SourceIP  = tostring(p.src_ip),
-    User      = extract(@"user=(\S+)", 1, tostring(p.message)),
-    Message   = tostring(p.message)</code></pre>
+    | where isnotempty(ParentProcessName)
+    | extend ComputerName = tostring(AdditionalFields.ComputerName)
+    | where ParentProcessName =~ executable
+        or ParentProcessName endswith strcat(@"\", executable)
+    | where isempty(computer_name) or ComputerName =~ computer_name
+    | project TimeGenerated, ParentProcessName, ComputerName, SID
+    | join kind=inner sid_to_user on $left.SID == $right.SubjectUserSid
+    | summarize arg_max(TimeGenerated, *) by User = SubjectUserName, SID, ParentProcessName
+    | project TimeGenerated, User, SID, ParentProcessName, ComputerName
+    | order by TimeGenerated desc
+};</code></pre>
+            <p class="code-label">Calling it</p>
+<pre><code>executable_users("code.exe")
+executable_users("code.exe", 30d)
+executable_users("code.exe", 7d, "HQ-SERVER-01")</code></pre>
+            <p class="code-label">Why it's built this way</p>
+            <ul class="how">
+              <li><strong>Small join, cheap query.</strong> The security-event side is collapsed to one row
+                per SID before the join, and the process events are filtered by executable, time window,
+                and host first, so the join only handles rows that matter.</li>
+              <li><strong>Flexible matching.</strong> The executable matches by exact name or by the end of
+                a path, so <code>code.exe</code> finds <code>C:\Program Files\...\code.exe</code> without
+                also matching <code>notcode.exe</code>.</li>
+              <li><strong>Optional scoping.</strong> The host filter is optional, so the same function works
+                for both fleet-wide questions and one-server investigations.</li>
+              <li><strong>One clean answer.</strong> Results are summarized by user, SID, and parent process
+                with <code>arg_max</code>, so each user appears once with their latest activity.</li>
+            </ul>
           </div>
           <div class="story-block">
             <p class="story-label">The result</p>
-            <p>Analysts with limited KQL experience can investigate effectively, triage is faster, and the
-              team has a shared set of tested queries to build on.</p>
+            <p>"Who has run this, and where?" becomes a one-line call instead of a hand-built join. Saved as
+              a workspace function, any analyst can use it, which lets people with limited KQL experience
+              scope an investigation or a vulnerability hunt quickly and consistently.</p>
           </div>
         </div>
       </article>
