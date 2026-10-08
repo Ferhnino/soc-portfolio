@@ -1,1 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mustang Panda: example threat intel output</title>
+<meta name="description" content="Sample output of an automated weekly threat intelligence workflow: a TTP profile and hunt ideas for Mustang Panda, built from public sources.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
 
+<header class="hero">
+  <div class="wrap hero-inner" style="padding-bottom:40px">
+    <nav class="nav" style="padding-bottom:40px">
+      <a class="nav-mark" href="../index.html#build" style="text-decoration:none">← /soc</a>
+    </nav>
+    <p class="role" style="margin-top:0">Example output only · threat-feed-lite</p>
+    <h1 style="font-size:clamp(1.8rem,3.4vw,2.5rem)">Mustang Panda</h1>
+    <p class="pitch">TTP profile and hunt ideas. Generated October 7, 2026 by an automated workflow that
+      queries threat-feed-lite with Claude. Public sources only.</p>
+  </div>
+</header>
+
+<main>
+  <section class="section">
+    <div class="wrap">
+      <p class="skills-demonstrated" style="margin-top:0;margin-bottom:32px;padding:12px 16px;border:1px solid var(--border);border-left:3px solid var(--accent);background:#fff"><strong>Example output only.</strong> This page shows the format of a weekly report. It is a sample built from public sources, not a live advisory, and it is not current threat guidance. Verify details against the original sources before acting on anything here.</p>
+      <h2>Bottom line</h2>
+      <p class="lead">Mustang Panda (also tracked as Stately Taurus and Earth Preta) is a China-nexus espionage group
+        that relies on phishing lures, DLL side-loading through legitimate software, and a small set of
+        well-known implants (PlugX, TONESHELL, PUBLOAD). The behaviors below apply to any organization, and
+        several are cheap to hunt for. The one most worth checking this week is abuse of the legitimate
+        <code>code.exe tunnel</code> feature to create a remote access channel.</p>
+
+      <h2 style="margin-top:48px">Scope</h2>
+      <p class="lead">Per this workflow's scoping rule, it includes only behavior relevant to US federal agencies or
+        applicable to any entity, and it excludes activity specific to other countries. Two recent items in the feed (Cisco Talos, September 30, 2026, and SentinelOne, July 9, 2026) focus on Asia-specific targeting and were left out for that reason. This sample does not include IOCs.</p>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="wrap">
+      <h2>Observed behavior</h2>
+      <div class="table-wrap" style="max-height:none">
+        <table class="feed-table">
+          <thead>
+            <tr><th>Stage</th><th>Behavior</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Initial access</td><td>Spear-phishing from compromised legitimate email accounts, with lures built from open-source research on the victim. LNK files made to look like PDFs launch a legitimate executable that side-loads a malicious DLL. A captive portal hijack that redirects victims to a payload download has also been reported.</td></tr>
+            <tr><td>Execution</td><td>DLL side-loading through legitimate software installers, antivirus agents, and application development tools. JavaScript run through <code>wscript.exe</code>, Meterpreter shellcode, TCP reverse shells over <code>cmd.exe</code>, and payloads delayed with ping requests.</td></tr>
+            <tr><td>Persistence and access</td><td>China Chopper web shells. Visual Studio Code tunnels created with <code>code.exe tunnel</code> through an established GitHub account. OpenSSH (<code>sshd.exe</code>) used to run commands and move files over SMB.</td></tr>
+            <tr><td>Defense evasion</td><td>Revoked or valid code signing certificates, timestomping, indicator removal from the registry, debugger checks, obfuscated or hashed Windows API calls, and FakeTLS headers to blend C2 traffic into normal TLS.</td></tr>
+            <tr><td>Credential access</td><td>Mimikatz against LSASS memory and DCSync, plus the Hdump credential dumping tool.</td></tr>
+            <tr><td>Discovery</td><td>AdFind and SharpNBTScan for domain users, groups, and computers. NBTscan for IP network scans. Impacket for remote directory queries. <code>wevtutil</code> to read Windows Security event logs and enumerate usernames. <code>wmic logicaldisk</code> and WMI queries for local drives and disk serial numbers.</td></tr>
+            <tr><td>Exfiltration</td><td>Archives sent over FTP, uploaded to Dropbox with <code>curl</code>, or sent through the C2 channel. Dropbox and Google Drive have also been used to host malicious downloads.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="skills-demonstrated">Source of the behavior mapping: <a href="https://attack.mitre.org/groups/G0129">MITRE ATT&amp;CK group G0129</a>.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <h2>Hunt ideas</h2>
+      <ul class="how">
+        <li><strong>VS Code tunnels.</strong> Look for <code>code.exe</code> launched with <code>tunnel</code> in the command line, especially on servers and on hosts where developers don't normally work.</li>
+        <li><strong>Side-loading.</strong> Look for signed, legitimate executables running from unexpected paths such as user profile folders or temp directories, especially when they load an unsigned DLL from the same folder.</li>
+        <li><strong>Discovery tooling.</strong> Look for <code>AdFind</code>, <code>nbtscan</code>, and Impacket artifacts on workstations, and for <code>wevtutil</code> run by non-administrative accounts.</li>
+        <li><strong>Credential theft.</strong> Look for LSASS memory access from unusual processes and for DCSync-style replication requests from non-domain-controller hosts.</li>
+        <li><strong>Exfiltration.</strong> Look for <code>curl</code> or FTP traffic to Dropbox and similar services from servers that don't normally reach them.</li>
+      </ul>
+      <p class="code-label">Starting point for the first idea (Microsoft Defender XDR table in Sentinel)</p>
+<pre><code>DeviceProcessEvents
+| where FileName =~ "code.exe"
+| where ProcessCommandLine has "tunnel"
+| project TimeGenerated, DeviceName, AccountName, ProcessCommandLine, InitiatingProcessFileName
+| order by TimeGenerated asc</code></pre>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="wrap">
+      <h2>Sources</h2>
+      <p class="lead">Behavior was taken from MITRE ATT&amp;CK entries for Mustang Panda, which cite these vendor reports:
+        Palo Alto Unit 42 (Stately Taurus and TONESHELL, September 2023; Chinese VSCode tunnels, September 2024),
+        Trend Micro (Earth Preta and TONESHELL, 2022 and February 2025), Google Threat Intelligence Group
+        (PlugX, August 2025), IBM (PUBLOAD and CLAIMLOADER, June 2025), Zscaler (April 2025),
+        ESET (PlugX, March 2022), Cisco Talos (May 2022), Sophos, EclecticIQ, and Lab52 (May 2023).
+        Read the original reports before acting on any detail here.</p>
+      <p class="skills-demonstrated">This page shows the format of the weekly workflow's output: a narrow scope,
+        sourced behavior, and hunt ideas an analyst can run the same day.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="hero contact">
+  <div class="wrap contact-inner">
+    <h2>Get in touch</h2>
+    <ul class="contact-list">
+      <li><span>GitHub</span><a href="https://github.com/Ferhnino">github.com/Ferhnino</a></li>
+    </ul>
+  </div>
+</footer>
+
+</body>
+</html>
