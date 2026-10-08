@@ -460,3 +460,21 @@ pre code {
 
 .story { grid-template-columns: minmax(0, 1fr); }
 .story-block { min-width: 0; }
+
+.how {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  max-width: 68ch;
+  color: var(--text);
+}
+
+.how li { margin-bottom: 8px; }
+
+.how code, .story-block p code {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.9em;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1px 5px;
+}

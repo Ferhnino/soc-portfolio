@@ -230,15 +230,15 @@
     ASimProcessEvents
     | where TimeGenerated &gt; ago(lookback)
     | where isnotempty(ParentProcessName)
+    | extend ParentProcessName = tostring(split(ParentProcessName, @"\")[-1])
     | extend ComputerName = tostring(AdditionalFields.ComputerName)
     | where ParentProcessName =~ executable
-        or ParentProcessName endswith strcat(@"\", executable)
     | where isempty(computer_name) or ComputerName =~ computer_name
     | project TimeGenerated, ParentProcessName, ComputerName, SID
     | join kind=inner sid_to_user on $left.SID == $right.SubjectUserSid
-    | summarize arg_max(TimeGenerated, *) by User = SubjectUserName, SID, ParentProcessName
-    | project TimeGenerated, User, SID, ParentProcessName, ComputerName
-    | order by TimeGenerated desc
+    | summarize date_time = arg_max(TimeGenerated, *) by User = SubjectUserName, SID, ParentProcessName
+    | project date_time, ComputerName, User, SID, Process = ParentProcessName
+    | order by date_time asc
 };</code></pre>
             <p class="code-label">Calling it</p>
 <pre><code>executable_users("code.exe")
@@ -249,9 +249,8 @@ executable_users("code.exe", 7d, "HQ-SERVER-01")</code></pre>
               <li><strong>Small join, cheap query.</strong> The security-event side is collapsed to one row
                 per SID before the join, and the process events are filtered by executable, time window,
                 and host first, so the join only handles rows that matter.</li>
-              <li><strong>Flexible matching.</strong> The executable matches by exact name or by the end of
-                a path, so <code>code.exe</code> finds <code>C:\Program Files\...\code.exe</code> without
-                also matching <code>notcode.exe</code>.</li>
+              <li><strong>Matches on the file name.</strong> Any directory path is stripped from the parent
+                process name first, so analysts type just the file name, such as <code>code.exe</code>.</li>
               <li><strong>Optional scoping.</strong> The host filter is optional, so the same function works
                 for both fleet-wide questions and one-server investigations.</li>
               <li><strong>One clean answer.</strong> Results are summarized by user, SID, and parent process
